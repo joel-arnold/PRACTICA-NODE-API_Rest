@@ -17,7 +17,12 @@ const usuariosPost = async (req, res = response) => {
     const usuario = new Usuario({ nombre, correo, contrasena, rol })
 
     // ? VERIFICACIÓN DE EXISTENCIA DEL CORREO
-
+    const existeCorreo = await Usuario.findOne({ correo })
+    if (existeCorreo) {
+        return res.status(400).json({
+            mensaje: 'El correo utilizado ya existe'
+        })
+    }
 
     // ? ENCRIPTADO DE LA CONTRASEÑA
     const modoEncriptado = encriptador.genSaltSync()
