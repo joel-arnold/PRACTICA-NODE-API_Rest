@@ -1,8 +1,8 @@
 // * IMPORTACIONES NECESARIAS
 const { Router } = require('express')
 const { check } = require('express-validator')
-const Rol = require('../models/rol')
 
+const { esRolValido, emailExiste, existeUsuarioPorID } = require('../helpers/validadores-db')
 const { validarCampos } = require('../middlewares/validar-campos')
 
 const { usuariosGet, usuariosPut, usuariosPost, usuariosDelete, usuariosPatch } = require('../controllers/usuarios')
@@ -16,16 +16,15 @@ router.post('/', [
     check('nombre', 'El nombre es obligatorio').not().isEmpty(),
     check('contrasena', 'Contraseña de mínimo 6 caracteres').isLength({ min: 6 }),
     check('correo', 'El correo no es válido').isEmail(),
-    // check('rol', 'No es un rol válido').isIn(['ROL_ADMIN', 'ROL_USUARIO']),
-    check('rol').custom(async (rol = '') => {
-        const existeRol = await Rol.findOne({ rol })
-        if (!existeRol) {
-            throw new Error(`El rol ${rol} no está registrado en la base de datos.`)
-        }
-    }),
+    check('correo', 'El correo ya está en uso').custom(emailExiste),
+    check('rol').custom(esRolValido),
     validarCampos
 ], usuariosPost)
-router.put('/:id', usuariosPut)
+router.put('/:id', [
+    check('id', 'El ID no es válido').isMongoId(),
+    check('id').custom(existeUsuarioPorID),
+    validarCampos
+], usuariosPut)
 router.patch('/', usuariosPatch)
 router.delete('/', usuariosDelete)
 
