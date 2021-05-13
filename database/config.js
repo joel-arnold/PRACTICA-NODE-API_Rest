@@ -1,6 +1,5 @@
 const mongoose = require('mongoose')
 
-
 const conexionBD = async () => {
 
     try {

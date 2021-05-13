@@ -2,13 +2,21 @@ const { request, response } = require("express")
 const encriptador = require('bcryptjs')
 const Usuario = require('../models/usuario')
 
-const usuariosGet = (req = request, res = response) => {
-    const { id, nombre = 'Sin nombre', apikey = 'sin api key' } = req.query
+const usuariosGet = async (req = request, res = response) => {
+
+    const { desde = 0, limite = 5 } = req.query
+    const consulta = { estado: true }
+
+    const [total, usuarios] = await Promise.all([
+        Usuario.countDocuments(consulta),
+        Usuario.find(consulta)
+            .skip(Number(desde))
+            .limit(Number(limite))
+    ]);
+
     res.json({
-        mensaje: 'Se hizo un GET - desde el controlador',
-        id,
-        nombre,
-        apikey
+        total,
+        usuarios
     })
 }
 
@@ -46,22 +54,24 @@ const usuariosPut = async (req, res) => {
 
     const usuario = await Usuario.findByIdAndUpdate(id, resto)
 
-    res.json({
-        usuario,
-        resto
-    })
+    res.json(usuario)
 }
 
-const usuariosPatch = (req, res) => {
+const usuariosPatch = (req, res = response) => {
     res.json({
         mensaje: 'Se hizo un PATCH - desde el controlador'
     })
 }
 
-const usuariosDelete = (req, res) => {
-    res.json({
-        mensaje: 'Se hizo un DELETE - desde el controlador'
-    })
+const usuariosDelete = async (req, res = response) => {
+    const { id } = req.params
+
+    // * Esto es si quisiera borrarlo "fisicamente"
+    // const usuario = await Usuario.findByIdAndDelete( id );
+
+    const usuario = await Usuario.findByIdAndUpdate(id, { estado: false });
+
+    res.json(usuario)
 }
 
 module.exports = {
