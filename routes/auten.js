@@ -3,7 +3,7 @@ const { check } = require('express-validator')
 
 const { validarCampos } = require('../middlewares/validar-campos')
 
-const { iniciarSesion } = require('../controllers/auth')
+const { iniciarSesion } = require('../controllers/auth.js')
 
 const router = Router()
 
