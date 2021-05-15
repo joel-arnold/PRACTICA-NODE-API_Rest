@@ -8,6 +8,7 @@ class Server {
         this.app = express()
         this.puerto = process.env.PUERTO
         this.directorioUsuario = '/api/usuarios'
+        this.directorioAutenticacion = '/api/auten'
 
         // * CONECTAR A LA BASE DE DATOS
         this.conectarBD()
@@ -36,6 +37,7 @@ class Server {
 
     // * MANEJO DE LAS RUTAS
     routes() {
+        this.app.use(this.directorioAutenticacion, require('../routes/auten'))
         this.app.use(this.directorioUsuario, require('../routes/usuarios'))
     }
 
