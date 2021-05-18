@@ -13,43 +13,48 @@ const {
 const { esRoleValido, emailExiste, existeUsuarioPorId } = require('../helpers/db-validators');
 
 const { usuariosGet,
-        usuariosPut,
-        usuariosPost,
-        usuariosDelete,
-        usuariosPatch } = require('../controllers/usuarios');
+    usuariosPut,
+    usuariosPost,
+    usuariosDelete,
+    usuariosPatch } = require('../controllers/usuarios');
 
 const router = Router();
 
 
-router.get('/', usuariosGet );
+// * RESPECTO A PRIVILEGIOS NO PIDE NADA
+router.get('/', usuariosGet);
 
-router.put('/:id',[
+router.put('/:id', [
     check('id', 'No es un ID válido').isMongoId(),
-    check('id').custom( existeUsuarioPorId ),
-    check('rol').custom( esRoleValido ), 
+    check('id').custom(existeUsuarioPorId),
+    check('rol').custom(esRoleValido),
     validarCampos
-],usuariosPut );
+], usuariosPut);
 
-router.post('/',[
+// * RESPECTO A PRIVILEGIOS NO PIDE TOKEN, SOLO ROL VÁLIDO
+router.post('/', [
     check('nombre', 'El nombre es obligatorio').not().isEmpty(),
     check('password', 'El password debe de ser más de 6 letras').isLength({ min: 6 }),
     check('correo', 'El correo no es válido').isEmail(),
-    check('correo').custom( emailExiste ),
+    check('correo').custom(emailExiste),
     // check('rol', 'No es un rol válido').isIn(['ADMIN_ROLE','USER_ROLE']),
-    check('rol').custom( esRoleValido ), 
+    // ! ACÁ EL ROL SE VALIDA BUSCANDOLO EN LA BASE DE DATOS
+    check('rol').custom(esRoleValido),
     validarCampos
-], usuariosPost );
+], usuariosPost);
 
-router.delete('/:id',[
+// * RESPECTO A PRIVILEGIOS PIDE TOKEN Y ROL VÁLIDO
+router.delete('/:id', [
     validarJWT,
     // esAdminRole,
-    tieneRole('ADMIN_ROLE', 'VENTAR_ROLE','OTRO_ROLE'),
+    // ! ACÁ EL ROL SE VALIDA DE FORMA "JARCODEADA"
+    tieneRole('ADMIN_ROLE', 'VENTAR_ROLE', 'OTRO_ROLE'),
     check('id', 'No es un ID válido').isMongoId(),
-    check('id').custom( existeUsuarioPorId ),
+    check('id').custom(existeUsuarioPorId),
     validarCampos
-],usuariosDelete );
+], usuariosDelete);
 
-router.patch('/', usuariosPatch );
+router.patch('/', usuariosPatch);
 
 
 
