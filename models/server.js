@@ -1,53 +1,69 @@
-const express = require('express')
-const cors = require('cors')
-const { conexionBD } = require('../database/config')
+const express = require('express');
+const cors = require('cors');
+
+const { dbConnection } = require('../database/config');
 
 class Server {
 
     constructor() {
-        this.app = express()
-        this.puerto = process.env.PUERTO
-        this.directorioUsuario = '/api/usuarios'
-        this.directorioAutenticacion = '/api/auten'
+        this.app  = express();
+        this.port = process.env.PORT;
 
-        // * CONECTAR A LA BASE DE DATOS
-        this.conectarBD()
+        this.paths = {
+            auth:       '/api/auth',
+            buscar:     '/api/buscar',
+            categorias: '/api/categorias',
+            productos:  '/api/productos',
+            usuarios:   '/api/usuarios',
+        }
 
-        // * MIDDLEWARES
-        this.middlewares()
 
-        // * RUTAS
-        this.routes()
+        // Conectar a base de datos
+        this.conectarDB();
+
+        // Middlewares
+        this.middlewares();
+
+        // Rutas de mi aplicación
+        this.routes();
     }
 
-    async conectarBD() {
-        await conexionBD()
+    async conectarDB() {
+        await dbConnection();
     }
+
 
     middlewares() {
-        // * CORS
-        this.app.use(cors())
 
-        // * LECTURA Y PARSE DEL BODY
-        this.app.use(express.json())
+        // CORS
+        this.app.use( cors() );
 
-        // * DIRECTORIO PÚBLICO
-        this.app.use(express.static('public'))
+        // Lectura y parseo del body
+        this.app.use( express.json() );
+
+        // Directorio Público
+        this.app.use( express.static('public') );
+
     }
 
-    // * MANEJO DE LAS RUTAS
     routes() {
-        this.app.use(this.directorioAutenticacion, require('../routes/auten'))
-        this.app.use(this.directorioUsuario, require('../routes/usuarios'))
+        
+        this.app.use( this.paths.auth, require('../routes/auth'));
+        this.app.use( this.paths.buscar, require('../routes/buscar'));
+        this.app.use( this.paths.categorias, require('../routes/categorias'));
+        this.app.use( this.paths.productos, require('../routes/productos'));
+        this.app.use( this.paths.usuarios, require('../routes/usuarios'));
     }
 
-    // * DEFINICIÓN DE PUERTO DE ESCUCHA
     listen() {
-        this.app.listen(this.puerto, () => {
-            console.log('Escuchando en puerto: ', this.puerto);
-        })
+        this.app.listen( this.port, () => {
+            console.log('Servidor corriendo en puerto', this.port );
+        });
     }
+
 }
 
-// * EXPORTO LA CLASE PARA QUE ESTÉ DISPONIBLE ¿EN TODA? LA APLICACIÓN
-module.exports = Server
+
+
+
+module.exports = Server;

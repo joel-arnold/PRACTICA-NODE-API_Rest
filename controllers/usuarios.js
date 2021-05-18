@@ -1,83 +1,84 @@
-const { request, response } = require("express")
-const encriptador = require('bcryptjs')
-const Usuario = require('../models/usuario')
+const { response, request } = require('express');
+const bcryptjs = require('bcryptjs');
 
-const usuariosGet = async (req = request, res = response) => {
 
-    const { desde = 0, limite = 5 } = req.query
-    const consulta = { estado: true }
+const Usuario = require('../models/usuario');
 
-    const [total, usuarios] = await Promise.all([
-        Usuario.countDocuments(consulta),
-        Usuario.find(consulta)
-            .skip(Number(desde))
-            .limit(Number(limite))
+
+
+const usuariosGet = async(req = request, res = response) => {
+
+    const { limite = 5, desde = 0 } = req.query;
+    const query = { estado: true };
+
+    const [ total, usuarios ] = await Promise.all([
+        Usuario.countDocuments(query),
+        Usuario.find(query)
+            .skip( Number( desde ) )
+            .limit(Number( limite ))
     ]);
 
     res.json({
         total,
         usuarios
-    })
+    });
 }
 
-const usuariosPost = async (req, res = response) => {
-    // ? Elijo solo los datos que necesito y omito todo lo que pudiera llegar desde el front
-    const { nombre, correo, contrasena, rol } = req.body
-    const usuario = new Usuario({ nombre, correo, contrasena, rol })
+const usuariosPost = async(req, res = response) => {
+    
+    const { nombre, correo, password, rol } = req.body;
+    const usuario = new Usuario({ nombre, correo, password, rol });
 
-    // ? Encriptado de la contraseña
-    const modoEncriptado = encriptador.genSaltSync()
-    usuario.contrasena = encriptador.hashSync(contrasena, modoEncriptado)
+    // Encriptar la contraseña
+    const salt = bcryptjs.genSaltSync();
+    usuario.password = bcryptjs.hashSync( password, salt );
 
-    // ? GUARDADO DEL USUARIO EN LA BASE DE DATOS
-    await usuario.save()
+    // Guardar en BD
+    await usuario.save();
 
-    // ? DEVUELVO LOS DATOS DEL USUARIO DADO DE ALTA
     res.json({
         usuario
-    })
+    });
 }
 
-const usuariosPut = async (req, res) => {
-    // ? Con esto saco el ID de la ruta (...ruta/usuarios/ID)
-    const { id } = req.params
+const usuariosPut = async(req, res = response) => {
 
-    // ? Con esto separo e identifico los elementos que quiero del cuerpo de la petición
-    const { _id, contrasena, correo, google, ...resto } = req.body
+    const { id } = req.params;
+    const { _id, password, google, correo, ...resto } = req.body;
 
-    // TODO Validar contra BD
-    if (contrasena) {
-        // ? Encriptado de la contraseña
-        const modoEncriptado = encriptador.genSaltSync()
-        resto.contrasena = encriptador.hashSync(contrasena, modoEncriptado)
+    if ( password ) {
+        // Encriptar la contraseña
+        const salt = bcryptjs.genSaltSync();
+        resto.password = bcryptjs.hashSync( password, salt );
     }
 
-    const usuario = await Usuario.findByIdAndUpdate(id, resto)
+    const usuario = await Usuario.findByIdAndUpdate( id, resto );
 
-    res.json(usuario)
+    res.json(usuario);
 }
 
 const usuariosPatch = (req, res = response) => {
     res.json({
-        mensaje: 'Se hizo un PATCH - desde el controlador'
-    })
+        msg: 'patch API - usuariosPatch'
+    });
 }
 
-const usuariosDelete = async (req, res = response) => {
-    const { id } = req.params
+const usuariosDelete = async(req, res = response) => {
 
-    // * Esto es si quisiera borrarlo "fisicamente"
-    // const usuario = await Usuario.findByIdAndDelete( id );
+    const { id } = req.params;
+    const usuario = await Usuario.findByIdAndUpdate( id, { estado: false } );
 
-    const usuario = await Usuario.findByIdAndUpdate(id, { estado: false });
-
-    res.json(usuario)
+    
+    res.json(usuario);
 }
+
+
+
 
 module.exports = {
     usuariosGet,
     usuariosPost,
     usuariosPut,
     usuariosPatch,
-    usuariosDelete
+    usuariosDelete,
 }

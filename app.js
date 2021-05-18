@@ -1,12 +1,9 @@
-// * IMPORTACIONES DE TERCEROS
-require('dotenv').config()
-
-// * IMPORTACIONES PROPIAS
-const Server = require('./models/server')
-
-// * VARIABLES
-const servidor = new Server()
+require('dotenv').config();
+const Server = require('./models/server');
 
 
-console.clear();
-servidor.listen()
+const server = new Server();
+
+
+
+server.listen();

@@ -1,24 +1,30 @@
-const mongoose = require('mongoose')
+const mongoose = require('mongoose');
 
-const conexionBD = async () => {
+
+
+const dbConnection = async() => {
 
     try {
-        await mongoose.connect(
-            process.env.CADENA_CON_MONGO,
-            {
-                useNewUrlParser: true,
-                useUnifiedTopology: true,
-                useCreateIndex: true,
-                useFindAndModify: false
-            }
-        )
-        console.log('Base de datos en línea');
+
+        await mongoose.connect( process.env.MONGODB_CNN, {
+            useNewUrlParser: true,
+            useUnifiedTopology: true,
+            useCreateIndex: true,
+            useFindAndModify: false
+        });
+    
+        console.log('Base de datos online');
+
     } catch (error) {
-        throw new Error('Falló la conexión a la base de datos')
+        console.log(error);
+        throw new Error('Error a la hora de iniciar la base de datos');
     }
+
+
 }
 
 
+
 module.exports = {
-    conexionBD
+    dbConnection
 }

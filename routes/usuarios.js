@@ -1,41 +1,58 @@
-// * IMPORTACIONES NECESARIAS
-const { Router } = require('express')
-const { check } = require('express-validator')
 
-const { validarCampos } = require('../middlewares/validar-campos')
-const { esRolValido, emailExiste, existeUsuarioPorID } = require('../helpers/validadores-db')
+const { Router } = require('express');
+const { check } = require('express-validator');
 
-const { usuariosGet, usuariosPut, usuariosPost, usuariosDelete, usuariosPatch } = require('../controllers/usuarios')
+const {
+    validarCampos,
+    validarJWT,
+    esAdminRole,
+    tieneRole
+} = require('../middlewares');
 
-// * VARIABLES
-const router = Router()
 
-// * RUTAS
-router.get('/', usuariosGet)
+const { esRoleValido, emailExiste, existeUsuarioPorId } = require('../helpers/db-validators');
 
-router.put('/:id', [
-    check('id', 'El ID no es válido').isMongoId(),
-    check('id').custom(existeUsuarioPorID),
-    check('rol').custom(esRolValido),
-    validarCampos
-], usuariosPut)
+const { usuariosGet,
+        usuariosPut,
+        usuariosPost,
+        usuariosDelete,
+        usuariosPatch } = require('../controllers/usuarios');
 
-router.post('/', [
-    check('nombre', 'El nombre es obligatorio').not().isEmpty(),
-    check('contrasena', 'Contraseña de mínimo 6 caracteres').isLength({ min: 6 }),
-    check('correo', 'El correo no es válido').isEmail(),
-    check('correo', 'El correo ya está en uso').custom(emailExiste),
-    check('rol').custom(esRolValido),
-    validarCampos
-], usuariosPost)
+const router = Router();
 
-router.patch('/', usuariosPatch)
 
-router.delete('/:id', [
+router.get('/', usuariosGet );
+
+router.put('/:id',[
     check('id', 'No es un ID válido').isMongoId(),
-    check('id').custom(existeUsuarioPorID),
+    check('id').custom( existeUsuarioPorId ),
+    check('rol').custom( esRoleValido ), 
     validarCampos
-], usuariosDelete)
+],usuariosPut );
 
-// * EXPORTO EL ROUTER
-module.exports = router
+router.post('/',[
+    check('nombre', 'El nombre es obligatorio').not().isEmpty(),
+    check('password', 'El password debe de ser más de 6 letras').isLength({ min: 6 }),
+    check('correo', 'El correo no es válido').isEmail(),
+    check('correo').custom( emailExiste ),
+    // check('rol', 'No es un rol válido').isIn(['ADMIN_ROLE','USER_ROLE']),
+    check('rol').custom( esRoleValido ), 
+    validarCampos
+], usuariosPost );
+
+router.delete('/:id',[
+    validarJWT,
+    // esAdminRole,
+    tieneRole('ADMIN_ROLE', 'VENTAR_ROLE','OTRO_ROLE'),
+    check('id', 'No es un ID válido').isMongoId(),
+    check('id').custom( existeUsuarioPorId ),
+    validarCampos
+],usuariosDelete );
+
+router.patch('/', usuariosPatch );
+
+
+
+
+
+module.exports = router;
